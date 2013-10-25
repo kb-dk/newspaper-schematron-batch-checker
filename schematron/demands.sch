@@ -105,104 +105,97 @@
         <!-- UNMATCHED -->
         <s:rule context="/node[@name=$batchID]/node[@name != concat($batchID,'/WORKSHIFT-ISO-TARGET')]/node[ends-with(@name,'UNMATCHED')]">
             <s:let name="filmName" value="replace(substring-before(../attribute[1]/@name,'.film.xml'),'^.*/','')"/>
-            <!-- Check: jp2 nodes in UNMATCHED must have same name as FILM-XML but end in -[0-9]{4}[A-Z]? instead -->
+            <!-- Check: Nodes in UNMATCHED must have same name as FILM-XML but end in -[0-9]{4}[A-Z]? instead -->
             <s:assert test="matches(node/@name, concat(@name,'/',$filmName,'-[0-9]{4}[A-Z]?'))">
                 unexpected unmatched target <s:value-of select="node/@name"/>
             </s:assert>
         </s:rule>
 
-        <!--FILM-ISO-TARGET -->
+        <!-- FILM-ISO-TARGET -->
         <s:rule context="/node[@name=$batchID]/node[@name != concat($batchID,'/WORKSHIFT-ISO-TARGET')]/node[ends-with(@name,'FILM-ISO-target')]">
             <s:let name="filmName" value="replace(substring-before(../attribute[1]/@name,'.film.xml'),'^.*/','')"/>
-            <!-- Check:  -->
+            <!-- Check: Every node under FILM-ISO-TARGET must have same name as FILM-XML but end in -ISO-[0-9]+ -->
             <s:assert test="matches(node/@name, concat(@name,'/',$filmName,'-ISO-[0-9]+'))">
                 unexpected iso target <s:value-of select="node/@name"/>
             </s:assert>
         </s:rule>
 
-        <!--"page"-->
+        <!--"PAGE"-->
         <s:rule context="/node[@name=$batchID]/
                         node[@name != concat($batchID,'/WORKSHIFT-ISO-TARGET')]/
                         node[ not(ends-with(@name,'UNMATCHED')) and not(ends-with(@name,'FILM-ISO-target'))]/
                         node[ not(ends-with(@name,'brik'))]">
-            <!--Test for existence of mix-->
-            <!--Test for child jp2 node-->
             <s:let name="editionID" value="parent::node/@name"/>
 
-            <!-- Check: -->
+            <!-- Check: Any node in BATCH/FILM/EDITION/ which is not a brik must contain a .mix.xml attribute -->
             <s:assert test="attribute/@name = concat(@name,'.mix.xml')">Mix not found in
                 <s:value-of select="@name"/> in <s:value-of select="$editionID"/>
             </s:assert>
 
-            <!-- Check: -->
+            <!-- Check: Any node in BATCH/FILM/EDITION/ which is not a brik must contain a .alto.xml attribute -->
             <s:assert test="attribute/@name = concat(@name,'.alto.xml')">Alto not found in
                 <s:value-of select="@name"/> in <s:value-of select="$editionID"/>
             </s:assert>
 
-            <!-- Check: -->
+            <!-- Check: Any node in BATCH/FILM/EDITION/ which is not a brik must contain a .mods.xml attribute -->
             <s:assert test="attribute/@name = concat(@name,'.mods.xml')">Mods not found in
                 <s:value-of select="@name"/> in <s:value-of select="$editionID"/>
             </s:assert>
 
-            <!-- Check: -->
+            <!-- Check: Any node in BATCH/FILM/EDITION/ which is not a brik must contain a .jp2 node -->
             <s:assert test="node/@name = concat(@name,'.jp2')">jp2 not found in
                 <s:value-of select="@name"/> in <s:value-of select="$editionID"/>
             </s:assert>
         </s:rule>
 
-        <!--"brik"-->
+        <!-- "BRIK" -->
         <s:rule context="/node[@name=$batchID]/
                         node[@name != concat($batchID,'/WORKSHIFT-ISO-TARGET')]/
                         node[ not(ends-with(@name,'UNMATCHED')) and not(ends-with(@name,'FILM-ISO-target'))]/
                         node[ ends-with(@name,'brik')]">
 
-            <!--Test for child jp2 node-->
             <s:let name="editionID" value="parent::node/@name"/>
 
-            <!-- Check: -->
+            <!-- Check: Any node in BATCH/FILM/EDITION/ which IS a brik must contain a .mix.xml attribute -->
             <s:assert test="attribute/@name = concat(@name,'.mix.xml')">Mix not found in
                 <s:value-of select="@name"/> in <s:value-of select="$editionID"/>
             </s:assert>
 
-            <!-- Check: -->
+            <!-- Check: Any node in BATCH/FILM/EDITION/ which IS a brik must contain a .jp2 node -->
             <s:assert test="node/@name = concat(@name,'.jp2')">jp2 not found in
                 <s:value-of select="@name"/> in <s:value-of select="$editionID"/>
             </s:assert>
         </s:rule>
 
-        <!--unmatched "images"-->
+        <!-- UNMATCHED "images" -->
         <s:rule context="/node[@name=$batchID]/node[@name != concat($batchID,'/WORKSHIFT-ISO-TARGET')]/node[ends-with(@name,'UNMATCHED')]/node">
-            <!--Test for existence of mix-->
-            <!--Test for child jp2 node-->
-            <!-- Check: -->
+            <!-- Check: Any node in BATCH/FILM/UNMATCHED/ must contain a .mix.xml attribute -->
             <s:assert test="attribute/@name = concat(@name,'.mix.xml')">Mix not found in
                 <s:value-of select="@name"/>
             </s:assert>
 
-            <!-- Check: -->
+            <!-- Check: Any node in BATCH/FILM/UNMATCHED/ must contain a .jp2 node -->
             <s:assert test="node/@name = concat(@name,'.jp2')">jp2 not found in
                 <s:value-of select="@name"/>
             </s:assert>
         </s:rule>
 
-        <!--"Film iso target images"-->
+        <!-- FILM-ISO-target "images" -->
         <s:rule context="/node[@name=$batchID]/node[@name != concat($batchID,'/WORKSHIFT-ISO-TARGET')]/node[ends-with(@name,'FILM-ISO-target')]/node">
-            <!--Test for existence of mix-->
-            <!--Test for child jp2 node-->
-            <!-- Check: -->
+            <!-- Check: Any node in BATCH/FILM/FILM-ISO-target/ must contain a .mix.xml attribute -->
             <s:assert test="attribute/@name = concat(@name,'.mix.xml')">Mix not found in
                 <s:value-of select="@name"/>
             </s:assert>
 
-            <!-- Check: -->
+            <!-- Check: Any node in BATCH/FILM/FILM-ISO-target/ must contain a .jp2 node -->
             <s:assert test="node/@name = concat(@name,'.jp2')">jp2 not found in
                 <s:value-of select="@name"/>
             </s:assert>
         </s:rule>
 
-        <!--jp2 file-->
+        <!-- jp2 node contents -->
         <s:rule context="/node[@name=$batchID]/node[@name != concat($batchID,'/WORKSHIFT-ISO-TARGET')]/node/node/node">
-            <!-- Check: -->
+            <!-- Check: Every jp2 node must have a contents attribute -->
             <s:assert test="attribute[@name=concat(../@name,'/contents')]">Contents not found for jp2file
                 <s:value-of select="@name"/>
             </s:assert>
