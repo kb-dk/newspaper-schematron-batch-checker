@@ -108,17 +108,12 @@
                               node[ not(ends-with(@name,'brik'))]">
             <!-- Existence of jp2 node and mix is done globally elsewhere -->
             <s:let name="editionID" value="parent::node/@name"/>
-            <s:assert test="attribute/@name = concat(@name,'.alto.xml')">Alto not found in
-                <s:value-of select="@name"/>
-                in
-                <s:value-of select="$editionID"/>
-            </s:assert>
 
-            <s:assert test="attribute/@name = concat(@name,'.mods.xml')">Mods not found in
-                <s:value-of select="@name"/>
-                in
-                <s:value-of select="$editionID"/>
-            </s:assert>
+            <!-- Check: Any node in BATCH/FILM/EDITION/ which is not a brik must contain a .alto.xml attribute -->
+            <s:assert test="attribute/@name = concat(@name,'.alto.xml')">Alto not found in <s:value-of select="@name"/> in <s:value-of select="$editionID"/></s:assert>
+
+            <!-- Check: Any node in BATCH/FILM/EDITION/ which is not a brik must contain a .mods.xml attribute -->
+            <s:assert test="attribute/@name = concat(@name,'.mods.xml')">Mods not found in <s:value-of select="@name"/> in <s:value-of select="$editionID"/></s:assert>
         </s:rule>
     </s:pattern>
 
@@ -142,19 +137,13 @@
     <!-- This abstract pattern checks a "scan" i.e. a jp2 node, its contents attribute, and corresponding mix file -->
     <s:pattern abstract="true" id="scanChecker">
         <s:rule context="$scan">
-            <s:assert test="attribute/@name = concat(@name,'.mix.xml')">Mix not found in
-                <s:value-of select="@name"/>
-            </s:assert>
+            <s:assert test="attribute/@name = concat(@name,'.mix.xml')">Mix not found in <s:value-of select="@name"/></s:assert>
 
-            <s:assert test="node/@name = concat(@name,'.jp2')">jp2 not found in
-                <s:value-of select="@name"/>
-            </s:assert>
+            <s:assert test="node/@name = concat(@name,'.jp2')">jp2 not found in <s:value-of select="@name"/></s:assert>
         </s:rule>
 
         <s:rule context="$scan/node">
-            <s:assert test="attribute[@name=concat(../@name,'/contents')]">Contents not found for jp2file
-                <s:value-of select="@name"/>
-            </s:assert>
+            <s:assert test="attribute[@name=concat(../@name,'/contents')]">Contents not found for jp2file <s:value-of select="@name"/></s:assert>
         </s:rule>
     </s:pattern>
 
@@ -162,10 +151,7 @@
     <s:pattern abstract="true" id="inFilmChecker">
         <s:rule context="$inFilmPath">
             <s:let name="filmName" value="replace(substring-before(../attribute[1]/@name,'.film.xml'),'^.*/','')"/>
-            <s:assert test="matches(node/@name, concat(@name,'/',$filmName,$postPattern))">
-                unexpected file
-                <s:value-of select="node/@name"/>
-            </s:assert>
+            <s:assert test="matches(node/@name, concat(@name,'/',$filmName,$postPattern))">Unexpected file <s:value-of select="node/@name"/></s:assert>
         </s:rule>
     </s:pattern>
 
