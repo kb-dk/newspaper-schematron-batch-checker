@@ -7,14 +7,12 @@
     <!-- Example: B400022028241-RT1/WORKSHIFT-ISO-TARGET -->
     <s:let name="workshiftISOTarget" value="concat($batchID,'/WORKSHIFT-ISO-TARGET')"/>
 
+
     <s:pattern id="batchChecker">
         <s:rule context="/node[@name=$batchID]">
-            <s:assert test="matches(@name,'^B[0-9]{12}-RT[0-9]+$')">
-                Invalid batch name
-                <s:value-of select="@name"/>
-            </s:assert>
+            <s:assert test="matches(@name,'^B[0-9]{12}-RT[0-9]+$')"> Invalid batch name <s:value-of select="@name"/> </s:assert>
 
-            <s:assert test="node[@name = $workshiftISOTarget]">WORKSHIFT-ISO-TARGET not found</s:assert>
+            <s:assert test="node[@name = $workshiftISOTarget]"> WORKSHIFT-ISO-TARGET not found </s:assert>
         </s:rule>
     </s:pattern>
 
@@ -73,28 +71,26 @@
     </s:pattern>
 
 
-    <!--        <node name="B400022028241-RT1/400022028241-14/FILM-ISO-target">    -->
     <s:pattern id="filmIsoTargetChecker" is-a="inFilmChecker">
+        <!-- Example first parameter for abstract pattern: B400022028241-RT1/400022028241-14/FILM-ISO-target -->
         <s:param name="inFilmPath"
                  value="/node[@name=$batchID]/node[@name != $workshiftISOTarget]/node[ends-with(@name,'FILM-ISO-target')]"/>
         <s:param name="postPattern" value="'-ISO-[0-9]+'"/>
     </s:pattern>
 
 
-    <!--          <node name="B400022028241-RT1/400022028241-14/1795-06-15-01">    -->
     <s:pattern id="editionChecker">
-        <!--Edition-->
+        <!-- Example: B400022028241-RT1/400022028241-14/1795-06-15-01 -->
         <s:rule context="/node[@name=$batchID]/
            node[@name != $workshiftISOTarget]/
            node[ not(ends-with(@name,'UNMATCHED')) and not(ends-with(@name,'FILM-ISO-target'))]">
 
-            <!--Remember to test format of node id here-->
+            <!-- TODO Remember to test format of node id here -->
             <s:let name="filmID" value="parent::node/@name"/>
             <s:let name="editionID" value="replace(@name,'^.*/','')"/>
 
-            <!--Test edition format to ensure not unexpected folder-->
+            <!--TODO Test edition format to ensure not unexpected folder -->
 
-            <!--edition.xml is an attribute here-->
             <s:let name="newspaperName"
                    value="replace(replace(substring-before(../attribute[1]/@name,'.film.xml'),'^.*/',''),'[0-9]{12}-[0-9]{2}','')"/>
             <s:assert test="matches(attribute/@name, concat(@name,'/',$newspaperName,$editionID,'.edition.xml'))">
@@ -105,14 +101,13 @@
     </s:pattern>
 
 
-    <!--      <node name="B400022028241-RT1/400022028241-14/1795-06-15-01/adresseavisen1759-1795-06-15-01-0002"> -->
     <s:pattern id="editionPageChecker">
+        <!-- Example: B400022028241-RT1/400022028241-14/1795-06-15-01/adresseavisen1759-1795-06-15-01-0002 -->
         <s:rule context="/node[@name=$batchID]/
                               node[@name != $workshiftISOTarget]/
                               node[ not(ends-with(@name,'UNMATCHED')) and not(ends-with(@name,'FILM-ISO-target'))]/
                               node[ not(ends-with(@name,'brik'))]">
-            <!--Test for existence of mix-->
-            <!--Test for child jp2 node-->
+            <!-- Existence of jp2 node and mix is done globally elsewhere -->
             <s:let name="editionID" value="parent::node/@name"/>
             <s:assert test="attribute/@name = concat(@name,'.alto.xml')">Alto not found in
                 <s:value-of select="@name"/>
@@ -129,7 +124,7 @@
     </s:pattern>
 
 
-    <!--This pattern handles: unmatched, film-iso, edition pages and briks-->
+    <!-- This pattern checks scans for: unmatched, film-iso, edition pages and briks -->
     <s:pattern id="allScanChecker" is-a="scanChecker">
         <s:param name="scan"
                  value="/node[@name=$batchID]/node[@name != $workshiftISOTarget]/
@@ -138,21 +133,15 @@
 
 
     <s:pattern id="checksumExistence">
-        <!-- Check: Every file must have a checksum -->
         <s:rule context="attribute">
-            <s:report test="@checksum = 'null'">Checksum not found for
-                <s:value-of select="@name"/>
-            </s:report>
+            <s:report test="@checksum = 'null'">Checksum not found for <s:value-of select="@name"/></s:report>
         </s:rule>
     </s:pattern>
 
 
     <!-- This abstract pattern checks a "scan" i.e. a jp2 node, its contents attribute, and corresponding mix file -->
     <s:pattern abstract="true" id="scanChecker">
-        <s:title>scanChecker</s:title>
         <s:rule context="$scan">
-            <!--Test for existence of mix-->
-            <!--Test for child jp2 node-->
             <s:assert test="attribute/@name = concat(@name,'.mix.xml')">Mix not found in
                 <s:value-of select="@name"/>
             </s:assert>
@@ -162,7 +151,6 @@
             </s:assert>
         </s:rule>
 
-        <!--jp2 file-->
         <s:rule context="$scan/node">
             <s:assert test="attribute[@name=concat(../@name,'/contents')]">Contents not found for jp2file
                 <s:value-of select="@name"/>
