@@ -10,32 +10,32 @@
 
     <s:pattern id="batchChecker">
         <s:rule context="/node[@name=$batchID]">
-            <s:assert test="matches(@name,'^B[0-9]{12}-RT[0-9]+$')"> Invalid batch name <s:value-of select="@name"/> </s:assert>
+            <!-- Check: Name of outermost folder (batch folder) must have the right format: B[0-9]{12}-RT[0-9]+ -->
+            <s:assert test="matches(@name,'^B[0-9]{12}-RT[0-9]+$')">Invalid batch folder name <s:value-of select="@name"/></s:assert>
 
-            <s:assert test="node[@name = $workshiftISOTarget]"> WORKSHIFT-ISO-TARGET not found </s:assert>
+            <!-- Check: Batch folder must contain a folder called WORKSHIFT-ISO-TARGET -->
+            <s:assert test="node[@name = $workshiftISOTarget]">WORKSHIFT-ISO-TARGET not found in batch folder</s:assert>
         </s:rule>
     </s:pattern>
 
 
     <s:pattern id="workshiftIsoTargetChecker">
         <s:rule context="/node[@name=$batchID]/node[@name=$workshiftISOTarget]">
-            <s:assert test="count(node) != 0">No target files in WORKSHIFT ISO TARGET
-                <s:value-of select="node/@name"/>
-            </s:assert>
+            <!-- Check: WORKSHIFT-ISO-TARGET cannot be empty (must have atleast one node, i.e. DOMS-recognized jp2) -->
+            <s:assert test="count(node) != 0">No target files in WORKSHIFT-ISO-TARGET <s:value-of select="node/@name"/></s:assert>
 
-            <s:assert test="count(attribute) = 0">Unexpected file in WORKSHIFT ISO TARGET
-                <s:value-of select="attribute/@name"/>
-            </s:assert>
+            <!-- Check: WORKSHIFT-ISO-TARGET cannot contain attributes (only nodes, i.e. DOMS-recognized jp2s) -->
+            <s:assert test="count(attribute) = 0">Unexpected file in WORKSHIFT-ISO-TARGET <s:value-of select="attribute/@name"/></s:assert>
 
-            <s:report test="node[not(matches(@name,'^.*/Target-[0-9]{6}-[0-9]{4}$'))]">Unexpected folder in WORKSHIFT
-                ISO TARGET
-                <s:value-of select="node/@name"/>
-            </s:report>
+            <!-- Check: Names (nodes) in WORKSHIFT-ISO-TARGET must be of the right format: Target-[0-9]{6}-[0-9]{4} -->
+            <s:report test="node[not(matches(@name,'^.*/Target-[0-9]{6}-[0-9]{4}$'))]">Unexpected folder in WORKSHIFT-ISO-TARGET <s:value-of select="node/@name"/></s:report>
         </s:rule>
     </s:pattern>
 
 
     <s:pattern id="workshiftImageChecker" is-a="scanChecker">
+        <!-- Check: There must exist a file in each WORKSHIFT-ISO-TARGET/Target-[0-9]{6}-[0-9]{4} called Target-[0-9]{6}-[0-9]{4}.mix.xml -->
+        <!-- Check: There must exist a jp2-node in each WORKSHIFT-ISO-TARGET/Target-[0-9]{6}-[0-9]{4} called Target-[0-9]{6}-[0-9]{4}.jp2 containing a contents attribute -->
         <!-- Example parameter for abstract pattern: B400022028241-RT1/WORKSHIFT-ISO-TARGET/Target-000001-0001 -->
         <s:param name="scan" value="/node[@name=$batchID]/
           node[@name = $workshiftISOTarget]/
@@ -48,15 +48,14 @@
         <s:rule context="/node[@name=$batchID]/node[@name != $workshiftISOTarget]">
             <s:let name="filmID" value="@name"/>
 
-            <s:assert test="matches(@name,'/[0-9]{12}-[0-9]+$')">Invalid film name
-                <s:value-of select="@name"/>
-            </s:assert>
+            <!-- Check: Any folder in BATCH not called WORKSHIFT-ISO-TARGET must have name of format [0-9]{12}-[0-9]+ (a FILM folder) -->
+            <s:assert test="matches(@name,'/[0-9]{12}-[0-9]+$')">Invalid film name <s:value-of select="@name"/></s:assert>
 
+            <!-- Check: A file (attribute) in a FILM folder is only allowed if it has a name ending in -[0-9]{12}-[0-9]+[.]film[.]xml -->
             <!-- Example film-xml: B400022028241-RT1/400022028241-14/adresseavisen1759-400022028241-14.film.xml -->
-            <s:assert test="matches(attribute/@name,'.*-[0-9]{12}-[0-9]+[.]film[.]xml$')">Invalid film-xml name
-                <s:value-of select="@name"/>
-            </s:assert>
+            <s:assert test="matches(attribute/@name,'.*-[0-9]{12}-[0-9]+[.]film[.]xml$')">Invalid film-xml name <s:value-of select="@name"/></s:assert>
 
+            <!-- Check: In BATCH/FILM/ there should be a folder of the name FILM-ISO-target -->
             <!-- Example film-iso-target: B400022028241-RT1/400022028241-14/FILM-ISO-target -->
             <s:assert test="node[@name = concat($filmID,'/FILM-ISO-target')]">FILM-ISO-target not found</s:assert>
         </s:rule>
@@ -64,6 +63,7 @@
 
 
     <s:pattern id="unmatchedChecker" is-a="inFilmChecker">
+        <!-- Check: Nodes in UNMATCHED must have same name as FILM-XML but end in -[0-9]{4}[A-Z]? instead -->
         <!-- Example first parameter for abstract pattern: B400022028241-RT1/400022028241-14/UNMATCHED -->
         <s:param name="inFilmPath"
                  value="/node[@name=$batchID]/node[@name != $workshiftISOTarget]/node[ends-with(@name,'UNMATCHED')]"/>
@@ -72,6 +72,7 @@
 
 
     <s:pattern id="filmIsoTargetChecker" is-a="inFilmChecker">
+        <!-- Check: Every node under FILM-ISO-TARGET must have same name as FILM-XML but end in -ISO-[0-9]+ -->
         <!-- Example first parameter for abstract pattern: B400022028241-RT1/400022028241-14/FILM-ISO-target -->
         <s:param name="inFilmPath"
                  value="/node[@name=$batchID]/node[@name != $workshiftISOTarget]/node[ends-with(@name,'FILM-ISO-target')]"/>
@@ -93,10 +94,8 @@
 
             <s:let name="newspaperName"
                    value="replace(replace(substring-before(../attribute[1]/@name,'.film.xml'),'^.*/',''),'[0-9]{12}-[0-9]{2}','')"/>
-            <s:assert test="matches(attribute/@name, concat(@name,'/',$newspaperName,$editionID,'.edition.xml'))">
-                edition.xml not found
-                <s:value-of select="attribute/@name"/>
-            </s:assert>
+            <!-- Check: In BATCH/FILM/EDITION/ there must be a file called <newspaperName>-<EDITION>.edition.xml, with correct <> inserts -->
+            <s:assert test="matches(attribute/@name, concat(@name,'/',$newspaperName,$editionID,'.edition.xml'))">edition.xml not found <s:value-of select="attribute/@name"/></s:assert>
         </s:rule>
     </s:pattern>
 
@@ -134,6 +133,7 @@
 
     <s:pattern id="checksumExistence">
         <s:rule context="attribute">
+            <!-- Check: Every file must have a checksum -->
             <s:report test="@checksum = 'null'">Checksum not found for <s:value-of select="@name"/></s:report>
         </s:rule>
     </s:pattern>
